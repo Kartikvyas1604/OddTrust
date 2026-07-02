@@ -19,58 +19,73 @@ function AnimatedLine({ resolved, blocked }: { resolved: boolean | null; blocked
         stroke={blocked ? 'var(--color-signal-red)' : 'var(--color-pitch-green)'}
         strokeWidth={1.5}
         strokeDasharray="4 3"
-        opacity={resolved === null ? 0.3 : 0.7}
+        opacity={resolved === null ? 0.25 : 0.7}
       />
     </svg>
   );
 }
 
-function useInView(ref: React.RefObject<Element | null>) {
-  const [inView, setInView] = useState(false);
+function useOnScreen(ref: React.RefObject<Element | null>, threshold = 0.25) {
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
-      { threshold: 0.3 }
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [ref]);
-  return inView;
+  }, [ref, threshold]);
+  return visible;
 }
 
 export function GatePanel() {
   const sectionRef = useRef<HTMLElement>(null);
-  const inView = useInView(sectionRef);
+  const visible = useOnScreen(sectionRef, 0.3);
   const [step, setStep] = useState(0);
+  const [resolved, setResolved] = useState<'executed' | 'blocked' | null>(null);
 
   useEffect(() => {
-    if (!inView) return;
-    const timer = setTimeout(() => setStep(1), 600);
-    return () => clearTimeout(timer);
-  }, [inView]);
+    if (!visible || step !== 0) return;
+    const t1 = setTimeout(() => setStep(1), 500);
+    return () => clearTimeout(t1);
+  }, [visible, step]);
 
   useEffect(() => {
     if (step === 0 || step > actions.length) return;
-    const timer = setTimeout(() => setStep((s) => s + 1), 1200);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setStep((s) => s + 1), 1400);
+    return () => clearTimeout(t);
   }, [step]);
 
-  const resolved = step > actions.length ? true : null;
-  const blocked = resolved === true && Math.random() > 0.5;
+  useEffect(() => {
+    if (step !== actions.length + 1) return;
+    const t = setTimeout(() => {
+      setResolved(Math.random() > 0.4 ? 'executed' : 'blocked');
+    }, 600);
+    return () => clearTimeout(t);
+  }, [step]);
 
   const handleReplay = useCallback(() => {
     setStep(0);
-    setTimeout(() => setStep(1), 600);
+    setResolved(null);
+    setTimeout(() => setStep(1), 500);
   }, []);
+
+  const isBlocked = resolved === 'blocked';
 
   return (
     <section
       ref={sectionRef}
       className="border-b border-[var(--color-line-hairline)] px-6 py-16 sm:py-24"
     >
-      <div className="mx-auto max-w-3xl text-center">
+      <div
+        className="mx-auto max-w-3xl text-center transition-all duration-700 ease-out"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(24px)',
+        }}
+      >
         <h2
           className="mb-2 text-xs font-[400] uppercase tracking-[0.15em] text-[var(--color-text-secondary)]"
           style={{ fontFamily: 'var(--font-fraunces), serif' }}
@@ -86,14 +101,18 @@ export function GatePanel() {
         </p>
 
         <div className="relative mx-auto max-w-lg">
-          <AnimatedLine resolved={resolved} blocked={blocked} />
+          <AnimatedLine resolved={resolved ? true : null} blocked={!!isBlocked} />
 
           <div className="relative space-y-8" style={{ zIndex: 1 }}>
-            {actions.slice(0, step > actions.length ? actions.length : step).map((act, i) => (
+            {actions.slice(0, Math.min(step, actions.length)).map((act, i) => (
               <div
                 key={act.agent}
-                className="relative rounded-sm border border-[var(--color-line-hairline)] bg-[var(--color-bg-panel)] p-4 text-left transition-all duration-200"
-                style={{ animation: 'count-up 0.4s ease-out both' }}
+                className="relative rounded-sm border border-[var(--color-line-hairline)] bg-[var(--color-bg-panel)] p-4 text-left transition-all duration-300"
+                style={{
+                  animation: 'count-up 0.5s ease-out both',
+                  opacity: i < step ? 1 : 0,
+                  transform: i < step ? 'translateY(0)' : 'translateY(12px)',
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -125,10 +144,16 @@ export function GatePanel() {
                     {act.amount}
                   </span>
                   <span
-                    className="text-[11px] text-[var(--color-pitch-green)]"
-                    style={{ fontFamily: 'var(--font-martian-mono), monospace' }}
+                    className="flex items-center gap-1 text-[11px]"
+                    style={{
+                      fontFamily: 'var(--font-martian-mono), monospace',
+                      color: 'var(--color-pitch-green)',
+                      opacity: i < step ? 1 : 0,
+                      transition: 'opacity 0.3s ease',
+                    }}
                   >
-                    ✓ Query OK
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-pitch-green)]" />
+                    Query OK
                   </span>
                 </div>
               </div>
@@ -136,42 +161,50 @@ export function GatePanel() {
 
             {resolved && (
               <div
-                className={`relative rounded-sm border p-5 text-center transition-all duration-200 ${
-                  blocked ? 'animate-gate-block' : 'animate-gate-resolve'
+                className={`relative rounded-sm border p-5 text-center transition-all duration-[400ms] ${
+                  isBlocked ? 'animate-gate-block' : 'animate-gate-resolve'
                 }`}
                 style={{
-                  borderColor: blocked
+                  borderColor: isBlocked
                     ? 'rgba(255,77,77,0.4)'
                     : 'rgba(57,255,106,0.4)',
-                  backgroundColor: blocked
-                    ? 'rgba(255,77,77,0.05)'
-                    : 'rgba(57,255,106,0.05)',
+                  backgroundColor: isBlocked
+                    ? 'rgba(255,77,77,0.06)'
+                    : 'rgba(57,255,106,0.06)',
                 }}
               >
                 <span
                   className="text-lg font-[600] uppercase tracking-wider"
                   style={{
                     fontFamily: 'var(--font-martian-mono), monospace',
-                    color: blocked ? 'var(--color-signal-red)' : 'var(--color-pitch-green)',
+                    color: isBlocked ? 'var(--color-signal-red)' : 'var(--color-pitch-green)',
                   }}
                 >
-                  {blocked ? '⚠ BLOCKED' : '✓ EXECUTED'}
+                  {isBlocked ? '\u26A0 BLOCKED' : '\u2713 EXECUTED'}
                 </span>
                 <p
                   className="mt-2 text-xs text-[var(--color-text-secondary)]"
                   style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 300 }}
                 >
-                  {blocked
+                  {isBlocked
                     ? 'OddsTrust flagged margin inconsistency — execution halted'
                     : 'All consistency checks passed — trade executed on-chain'}
                 </p>
-                <button
-                  onClick={handleReplay}
-                  className="mt-4 rounded-sm border border-[var(--color-line-hairline)] px-3 py-1.5 text-[11px] uppercase tracking-wider text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
-                  style={{ fontFamily: 'var(--font-martian-mono), monospace' }}
-                >
-                  ↻ Replay
-                </button>
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <span
+                    className="text-[11px] text-[var(--color-text-tertiary)]"
+                    style={{ fontFamily: 'var(--font-martian-mono), monospace' }}
+                  >
+                    proof: 0x7a3f...b91e
+                  </span>
+                  <button
+                    onClick={handleReplay}
+                    className="rounded-sm border border-[var(--color-line-hairline)] px-3 py-1.5 text-[11px] uppercase tracking-wider text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                    style={{ fontFamily: 'var(--font-martian-mono), monospace' }}
+                  >
+                    \u21BB Replay
+                  </button>
+                </div>
               </div>
             )}
           </div>
