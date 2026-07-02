@@ -1,7 +1,5 @@
 'use client';
 
-import { useRef } from 'react';
-
 interface Fixture {
   home: string;
   away: string;
@@ -69,11 +67,8 @@ export function MatchGrid() {
 }
 
 function FixtureCard({ match, index }: { match: Fixture; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-
   return (
     <div
-      ref={ref}
       className="group cursor-pointer rounded-sm border border-[var(--color-line-hairline)] bg-[var(--color-bg-panel)] p-4 transition-all duration-100 ease-linear will-change-transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40 hover:border-[var(--color-pitch-green-dim)]"
       style={{ animation: `count-up 0.5s ease-out ${300 + index * 60}ms both` }}
     >

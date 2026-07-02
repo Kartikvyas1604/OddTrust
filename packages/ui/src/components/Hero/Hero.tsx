@@ -59,6 +59,10 @@ export function Hero() {
           </span>
         </div>
         <div
+          className="mx-auto mt-8 h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-trophy-gold)]/30 to-transparent"
+          style={{ animation: 'count-up 0.6s ease-out 500ms both' }}
+        />
+        <div
           className="mt-8 flex flex-wrap justify-center gap-x-10 gap-y-4"
           style={{ animation: 'count-up 0.6s ease-out 600ms both' }}
         >
