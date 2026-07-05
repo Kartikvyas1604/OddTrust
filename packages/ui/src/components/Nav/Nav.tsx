@@ -24,7 +24,7 @@ export function Nav() {
 
       <nav className="flex items-center gap-6 overflow-x-auto">
         {links.map((l) => {
-          const active = pathname === l.href;
+          const active = l.href === "/matches" ? pathname.startsWith("/matches") : pathname === l.href;
           return (
             <Link
               key={l.href}
