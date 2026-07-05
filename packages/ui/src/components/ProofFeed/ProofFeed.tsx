@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type Entry = {
   id: number;
@@ -42,23 +42,26 @@ const initialEntries: Entry[] = Array.from({ length: 5 }, (_, i) =>
 
 export function ProofFeed() {
   const [entries, setEntries] = useState<Entry[]>(initialEntries);
+  const countRef = useRef(5);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setEntries((prev) => {
-        const nextId = prev.length > 0 ? prev[0].id + 1 : 0;
-        const next = [generateEntry(nextId), ...prev.slice(0, 49)];
-        return next;
-      });
+      const nextId = countRef.current++;
+      setEntries((prev) => [generateEntry(nextId), ...prev.slice(0, 49)]);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <section className="pt-8">
-      <h2 className="text-sm font-mono-data text-text-secondary uppercase tracking-[0.1em] mb-4">
-        Proof Feed
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-mono-data text-text-secondary uppercase tracking-[0.1em]">
+          Proof Feed
+        </h2>
+        <span className="font-mono-data text-[10px] text-text-tertiary">
+          {entries.length} entries
+        </span>
+      </div>
       <div className="bg-bg-panel border border-line-hairline rounded-lg overflow-hidden">
         {/* header */}
         <div className="flex items-center gap-3 px-3 py-2 border-b border-line-hairline bg-bg-void/50">
@@ -80,7 +83,7 @@ export function ProofFeed() {
         <div className="divide-y divide-line-hairline/50 max-h-[360px] overflow-y-auto">
           {entries.map((entry, i) => {
             const cfg = statusConfig[entry.status];
-            const isNew = i === 0 && entry.id > 4;
+            const isNew = i === 0 && entry.id >= 5;
             return (
               <div
                 key={entry.id}
