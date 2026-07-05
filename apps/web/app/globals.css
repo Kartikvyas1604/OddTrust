@@ -22,10 +22,6 @@
   --section-gap: 48px;
 }
 
-:root {
-  --color-trophy-gold: #D4AF6A;
-}
-
 html {
   scroll-behavior: smooth;
   font-family: var(--font-display);

@@ -41,10 +41,7 @@ export function Hero() {
       <p className="text-xs font-mono-data text-text-secondary uppercase tracking-[0.12em] mb-2">
         Tournament Trust Score
       </p>
-      <h1
-        className="text-6xl md:text-8xl font-[500] tracking-tight leading-none"
-        style={{ color: "var(--color-trophy-gold, #D4AF6A)" }}
-      >
+      <h1 className="text-6xl md:text-8xl font-[500] tracking-tight leading-none text-trophy-gold">
         <CountUp end={97} duration={800} suffix="%" />
       </h1>
 
