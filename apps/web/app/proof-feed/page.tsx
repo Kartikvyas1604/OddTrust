@@ -1,5 +1,9 @@
 import { ProofFeed } from "@oddtrust/ui";
 
 export default function ProofFeedPage() {
-  return <ProofFeed />;
+  return (
+    <section className="py-12">
+      <ProofFeed />
+    </section>
+  );
 }
