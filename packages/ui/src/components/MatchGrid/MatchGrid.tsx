@@ -33,7 +33,6 @@ export function MatchCard({ fixture }: { fixture: Fixture }) {
   const cfg = statusConfig[fixture.status];
   return (
     <Link
-      key={fixture.id}
       href={`/matches/${fixture.id}`}
       className="group block bg-bg-panel border border-line-hairline rounded-lg p-4 no-underline transition-all duration-120 hover:-translate-y-0.5 hover:bg-bg-raised"
     >
