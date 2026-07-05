@@ -4,11 +4,15 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 
 type Resolution = "idle" | "inspecting" | "executed" | "blocked";
 
-const agents = ["Gate-01", "Gate-02", "Gate-03", "Gate-04"];
+const agents = [
+  { id: "Gate-01", label: "Margin Check" },
+  { id: "Gate-02", label: "Liquidity Gate" },
+  { id: "Gate-03", label: "Trust Anchor" },
+  { id: "Gate-04", label: "Settlement Guard" },
+];
 
-function AgentRow() {
+function AgentRow({ agent }: { agent: (typeof agents)[number] }) {
   const [state, setState] = useState<Resolution>("idle");
-  const agent = useRef(agents[Math.floor(Math.random() * agents.length)]);
 
   const resolve = useCallback(() => {
     setState("inspecting");
@@ -30,16 +34,16 @@ function AgentRow() {
     <div
       className={`rounded-lg border p-3 transition-all duration-300 ${
         state === "executed"
-          ? "border-pitch-green animate-gate-resolve"
+          ? "border-pitch-green/40 animate-gate-resolve"
           : state === "blocked"
-          ? "border-signal-red animate-gate-block"
+          ? "border-signal-red/40 animate-gate-block"
           : state === "inspecting"
-          ? "border-line-hairline"
-          : "border-line-hairline opacity-50"
+          ? "border-line-hairline bg-bg-raised/30"
+          : "border-line-hairline/40 opacity-60"
       }`}
     >
-      <div className="flex items-center justify-between">
-        <span className="font-mono-data text-xs text-text-secondary">{agent.current}</span>
+      <div className="flex items-center justify-between mb-1">
+        <span className="font-mono-data text-xs text-text-primary">{agent.id}</span>
         {state === "inspecting" && (
           <span className="font-mono-data text-[10px] text-text-tertiary animate-pulse">
             Inspecting...
@@ -52,6 +56,7 @@ function AgentRow() {
           <span className="font-mono-data text-[10px] text-signal-red">BLOCKED</span>
         )}
       </div>
+      <p className="text-[10px] text-text-tertiary">{agent.label}</p>
     </div>
   );
 }
@@ -91,8 +96,8 @@ export function GatePanel() {
         resolves a transaction based on live oracle state.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-2xl">
-        {agents.map((_, i) => (
-          <AgentRow key={i} />
+        {agents.map((agent) => (
+          <AgentRow key={agent.id} agent={agent} />
         ))}
       </div>
     </section>
