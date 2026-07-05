@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Martian_Mono } from "next/font/google";
 import "./globals.css";
-import { Background, TopStrip } from "@oddtrust/ui";
+import { Background } from "@oddtrust/ui";
+import { Nav } from "@oddtrust/ui";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -18,24 +19,17 @@ const martianMono = Martian_Mono({
 export const metadata: Metadata = {
   title: "OddsTrust — On-Chain Trust Oracle",
   description:
-    "Decentralized tournament outcome verification with on-chain trust scores.",
+    "Autonomous on-chain trust oracle for TxLINE World Cup odds data. Verifies market integrity across 130+ live fixtures.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${martianMono.variable}`}
-    >
+    <html lang="en" className={`${fraunces.variable} ${martianMono.variable}`}>
       <body>
         <Background />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 min-h-screen">
-          <TopStrip />
-          {children}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
+          <Nav />
+          <main className="flex-1">{children}</main>
         </div>
       </body>
     </html>

@@ -13,18 +13,9 @@
   --color-text-primary: #E9F2EC;
   --color-text-secondary: #8FA398;
   --color-text-tertiary: #4E5D55;
-
   --font-display: var(--font-fraunces), "Fraunces", serif;
   --font-mono: var(--font-martian-mono), "Martian Mono", monospace;
-
-  --card-padding: 24px;
   --card-radius: 8px;
-  --section-gap: 48px;
-}
-
-html {
-  scroll-behavior: smooth;
-  font-family: var(--font-display);
 }
 
 body {
@@ -35,81 +26,28 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code, pre, .font-mono-data {
-  font-family: var(--font-mono) !important;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes sweep-glow {
   0% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
 
-@keyframes feed-enter {
+@keyframes feed-slide-in {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes gate-resolve {
-  0% { background-color: transparent; }
-  50% { background-color: rgba(57, 255, 106, 0.08); }
-  100% { background-color: transparent; }
-}
-
-@keyframes gate-block {
-  0% { background-color: transparent; }
-  50% { background-color: rgba(255, 77, 77, 0.08); }
-  100% { background-color: transparent; }
-}
-
-@keyframes stagger-fade {
-  from { opacity: 0; transform: translateY(6px); }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
-.animate-pulse-dot {
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.animate-sweep-glow {
-  animation: sweep-glow 10s ease-in-out infinite;
-}
-
-.animate-feed-enter {
-  animation: feed-enter 0.2s ease-out;
-}
-
-.animate-gate-resolve {
-  animation: gate-resolve 0.4s ease-out;
-}
-
-.animate-gate-block {
-  animation: gate-block 0.4s ease-out;
-}
-
-.animate-count-up {
-  animation: count-up 0.6s ease-out forwards;
-}
-
-.animate-stagger-fade {
-  animation: stagger-fade 0.5s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
-}
+.animate-sweep { animation: sweep-glow 10s ease-in-out infinite; }
+.animate-feed-in { animation: feed-slide-in 0.2s ease-out; }
+.animate-fade-up { animation: fade-up 0.5s ease-out forwards; }
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }

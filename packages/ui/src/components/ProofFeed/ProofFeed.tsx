@@ -1,119 +1,95 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-type Entry = {
+type Status = "verified" | "inconsistent" | "failed";
+
+interface Entry {
   id: number;
   slot: string;
   fixture: string;
-  status: "verified" | "inconsistent" | "failed";
+  status: Status;
   margin: string;
-};
-
-const statusConfig = {
-  verified: { label: "Verified", color: "text-pitch-green" },
-  inconsistent: { label: "Inconsistent", color: "text-signal-amber" },
-  failed: { label: "Failed", color: "text-signal-red" },
-};
+  ts: string;
+}
 
 const allFixtures = [
-  "FC Zenith vs Atlas United",
-  "Stormhaven vs Northgate",
-  "Ironbound vs Silverlake",
-  "Crystal Palace vs Bridge City",
-  "Red Star vs Blue United",
-  "Eastside vs Westend",
-  "Harbor FC vs Southside",
-  "Valley United vs Crest Athletic",
+  "FC Zenith vs Atlas United", "Stormhaven vs Northgate",
+  "Ironbound vs Silverlake", "Crystal Palace vs Bridge City",
+  "Red Star vs Blue United", "Eastside vs Westend",
+  "Harbor FC vs Southside", "Valley United vs Crest Athletic",
 ];
 
-function seededEntry(id: number): Entry {
-  const statuses: Entry["status"][] = ["verified", "verified", "verified", "inconsistent", "verified"];
+const cfg: Record<Status, { label: string; cls: string }> = {
+  verified: { label: "Verified", cls: "text-pitch-green" },
+  inconsistent: { label: "Inconsistent", cls: "text-signal-amber" },
+  failed: { label: "Failed", cls: "text-signal-red" },
+};
+
+function makeEntry(id: number): Entry {
+  const r = Math.random();
   return {
     id,
     slot: String(284_391_882 + id),
-    fixture: allFixtures[id % allFixtures.length],
-    status: statuses[id % statuses.length],
-    margin: (85 + (id * 3) % 15).toFixed(1),
+    fixture: allFixtures[Math.floor(Math.random() * allFixtures.length)],
+    status: r > 0.75 ? "failed" : r > 0.4 ? "verified" : "inconsistent",
+    margin: (70 + Math.random() * 30).toFixed(1),
+    ts: new Date().toLocaleTimeString("en-US", { hour12: false }),
   };
 }
 
-function randomEntry(id: number): Entry {
-  const rand = Math.random();
-  const status = rand > 0.75 ? "failed" : rand > 0.4 ? "verified" : "inconsistent";
-  const slot = String(284_391_800 + Math.floor(Math.random() * 200));
-  const fixture = allFixtures[Math.floor(Math.random() * allFixtures.length)];
-  const margin = (70 + Math.random() * 30).toFixed(1);
-  return { id, slot, fixture, status, margin };
+function seed(n: number): Entry[] {
+  const out: Entry[] = [];
+  for (let i = 0; i < n; i++) {
+    const r = (i * 7 + 3) % 5;
+    out.push({
+      id: i,
+      slot: String(284_391_882 + i),
+      fixture: allFixtures[i % allFixtures.length],
+      status: r === 0 ? "failed" : r < 3 ? "verified" : "inconsistent",
+      margin: (85 + (i * 3) % 15).toFixed(1),
+      ts: `00:0${i + 1}:${String(12 + i).padStart(2, "0")}`,
+    });
+  }
+  return out;
 }
 
-const deterministicEntries: Entry[] = Array.from({ length: 5 }, (_, i) =>
-  seededEntry(i)
-);
-
 export function ProofFeed() {
-  const [entries, setEntries] = useState<Entry[]>(deterministicEntries);
-  const countRef = useRef(5);
+  const [entries, setEntries] = useState<Entry[]>(() => seed(5));
+  const [count, setCount] = useState(5);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const nextId = countRef.current++;
-      setEntries((prev) => [randomEntry(nextId), ...prev.slice(0, 49)]);
+    const iv = setInterval(() => {
+      setCount((c) => c + 1);
+      setEntries((prev) => [makeEntry(count + 1), ...prev.slice(0, 49)]);
     }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(iv);
+  }, [count]);
 
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-mono-data text-text-secondary uppercase tracking-[0.1em]">
-          Proof Feed
-        </h2>
-        <span className="font-mono-data text-[10px] text-text-tertiary">
-          {entries.length} entries
-        </span>
+        <h2 className="text-xs font-mono text-text-secondary uppercase tracking-[0.15em]">Proof Feed</h2>
+        <span className="font-mono text-[10px] text-text-tertiary">{entries.length} {entries.length === 1 ? "proof" : "proofs"}</span>
       </div>
       <div className="bg-bg-panel border border-line-hairline rounded-lg overflow-hidden">
-        <div className="flex items-center gap-3 px-3 py-2 border-b border-line-hairline bg-bg-void/50">
-          <span className="text-[10px] font-mono-data text-text-tertiary w-[80px] shrink-0">
-            Slot
-          </span>
-          <span className="text-[10px] font-mono-data text-text-tertiary flex-1">
-            Fixture
-          </span>
-          <span className="text-[10px] font-mono-data text-text-tertiary w-[80px] text-right shrink-0">
-            Margin
-          </span>
-          <span className="text-[10px] font-mono-data text-text-tertiary w-[90px] text-right shrink-0">
-            Status
-          </span>
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-line-hairline bg-bg-void/50">
+          <span className="font-mono text-[10px] text-text-tertiary w-[70px] shrink-0">Slot</span>
+          <span className="font-mono text-[10px] text-text-tertiary flex-1">Fixture</span>
+          <span className="font-mono text-[10px] text-text-tertiary w-[60px] text-right shrink-0">Margin</span>
+          <span className="font-mono text-[10px] text-text-tertiary w-[80px] text-right shrink-0">Time</span>
+          <span className="font-mono text-[10px] text-text-tertiary w-[80px] text-right shrink-0">Status</span>
         </div>
-
-        <div className="divide-y divide-line-hairline/50 max-h-[360px] overflow-y-auto">
-          {entries.map((entry, i) => {
-            const cfg = statusConfig[entry.status];
-            const isNew = i === 0 && entry.id >= 5;
+        <div className="divide-y divide-line-hairline/50 max-h-[340px] overflow-y-auto">
+          {entries.map((e, i) => {
+            const s = cfg[e.status];
             return (
-              <div
-                key={entry.id}
-                className={`flex items-center gap-3 px-3 py-2 ${
-                  isNew ? "animate-feed-enter" : ""
-                }`}
-              >
-                <span className="font-mono-data text-xs text-text-tertiary w-[80px] shrink-0">
-                  {entry.slot}
-                </span>
-                <span className="text-xs text-text-primary flex-1 truncate">
-                  {entry.fixture}
-                </span>
-                <span className="font-mono-data text-xs text-text-primary w-[80px] text-right shrink-0">
-                  {entry.margin}%
-                </span>
-                <span
-                  className={`font-mono-data text-xs ${cfg.color} w-[90px] text-right shrink-0`}
-                >
-                  {cfg.label}
-                </span>
+              <div key={e.id} className={`flex items-center gap-3 px-4 py-2 ${i === 0 && e.id >= 5 ? "animate-feed-in" : ""}`}>
+                <span className="font-mono text-xs text-text-tertiary w-[70px] shrink-0">{e.slot}</span>
+                <span className="text-xs text-text-primary flex-1 truncate">{e.fixture}</span>
+                <span className="font-mono text-xs text-text-primary w-[60px] text-right shrink-0">{e.margin}%</span>
+                <span className="font-mono text-xs text-text-tertiary w-[80px] text-right shrink-0">{e.ts}</span>
+                <span className={`font-mono text-xs ${s.cls} w-[80px] text-right shrink-0`}>{s.label}</span>
               </div>
             );
           })}

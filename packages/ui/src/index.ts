@@ -1,5 +1,5 @@
 export { Background } from './components/Background';
-export { TopStrip } from './components/TopStrip';
+export { Nav } from './components/Nav';
 export { Hero } from './components/Hero';
 export { MatchGrid, MatchCard, fixtures } from './components/MatchGrid';
 export { GatePanel } from './components/GatePanel';
