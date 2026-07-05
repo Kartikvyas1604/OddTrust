@@ -32,7 +32,7 @@ export function Hero() {
         <CountUp end={97} duration={800} suffix="%" />
       </h1>
 
-      <div className="mt-12 inline-grid grid-cols-1 sm:grid-cols-3 gap-4 mx-auto">
+      <div className="mt-12 inline-grid grid-cols-3 gap-4 mx-auto">
         <div className="bg-bg-raised border border-line-hairline rounded-lg p-5 min-w-[160px] text-center">
           <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-bg-void mb-3">
             <span className="inline-block w-2 h-2 rounded-full bg-text-tertiary" />
