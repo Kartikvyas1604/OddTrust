@@ -40,8 +40,11 @@ export async function GET(request: NextRequest) {
 
     if (cursor) {
       query = `
-        SELECT pl.id, pl.fixture_id, pl.consensus, pl.margin,
-               pl.on_chain_tx, pl.on_chain_slot, pl.summary, pl.logged_at
+        SELECT pl.id, pl.fixture_id,
+               pl.consensus, pl.margin, pl.summary,
+               pl.on_chain_tx, pl.on_chain_slot,
+               pl.action, pl.slot, pl.signature, pl.metadata,
+               pl.logged_at, pl.created_at
         FROM proof_log pl
         WHERE pl.logged_at < $1::timestamptz
         ORDER BY pl.logged_at DESC
@@ -50,8 +53,11 @@ export async function GET(request: NextRequest) {
       params = [cursor, limitNum + 1];
     } else {
       query = `
-        SELECT pl.id, pl.fixture_id, pl.consensus, pl.margin,
-               pl.on_chain_tx, pl.on_chain_slot, pl.summary, pl.logged_at
+        SELECT pl.id, pl.fixture_id,
+               pl.consensus, pl.margin, pl.summary,
+               pl.on_chain_tx, pl.on_chain_slot,
+               pl.action, pl.slot, pl.signature, pl.metadata,
+               pl.logged_at, pl.created_at
         FROM proof_log pl
         ORDER BY pl.logged_at DESC
         LIMIT $1
@@ -69,12 +75,14 @@ export async function GET(request: NextRequest) {
       entries: entries.map((r) => ({
         id: r.id,
         fixtureId: r.fixture_id,
+        action: r.action ?? (r.consensus === true ? 'CHECK_PASSED' : r.consensus === false ? 'CHECK_FLAGGED' : 'CHECK'),
         consensus: r.consensus,
-        margin: parseFloat(r.margin),
-        onChainTx: r.on_chain_tx,
-        onChainSlot: r.on_chain_slot ? parseInt(r.on_chain_slot, 10) : null,
+        margin: r.margin !== null ? parseFloat(r.margin) : null,
         summary: r.summary,
-        loggedAt: new Date(r.logged_at).toISOString(),
+        signature: r.signature ?? r.on_chain_tx,
+        slot: r.slot ?? (r.on_chain_slot ? parseInt(r.on_chain_slot, 10) : null),
+        metadata: r.metadata,
+        loggedAt: new Date(r.logged_at ?? r.created_at).toISOString(),
       })),
       pagination: { nextCursor, hasMore },
     }, { headers: corsHeaders });
