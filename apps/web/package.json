@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "setup": "tsx scripts/setup-env.ts",
     "start:ws": "tsx ws-server.ts",
     "start:worker": "tsx worker.ts",
     "lint": "next lint",
