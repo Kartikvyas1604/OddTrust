@@ -2,7 +2,7 @@ import { getEnv } from '../config';
 import { getLogger } from '../logger';
 import type { SubmissionJobData, SubmissionJobResult } from './types';
 
-import { AnchorProvider, Wallet, Program, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import idl from './idl.json';
 
 const PROGRAM_ID = new web3.PublicKey(idl.address);
@@ -54,8 +54,12 @@ export class OracleClient {
       }
 
       this.connection = new web3.Connection(env.SOLANA_RPC_URL, 'confirmed');
-      const wallet = new Wallet(this.payer);
-      const provider = new AnchorProvider(this.connection, wallet, {
+      const wallet = {
+        publicKey: this.payer.publicKey,
+        signTransaction: async (tx: web3.Transaction) => { tx.sign(this.payer!); return tx; },
+        signAllTransactions: async (txs: web3.Transaction[]) => { txs.forEach((tx) => tx.sign(this.payer!)); return txs; },
+      };
+      const provider = new AnchorProvider(this.connection, wallet as any, {
         commitment: 'confirmed',
         preflightCommitment: 'confirmed',
       });
