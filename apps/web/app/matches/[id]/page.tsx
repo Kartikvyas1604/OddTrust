@@ -1,8 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { fixtures } from "@oddtrust/ui";
 
 interface Market {
   name: string;
@@ -44,11 +44,46 @@ const markets: Market[] = [
 const implied = (o: number) => 1 / o;
 const fmtPct = (p: number) => `${(p * 100).toFixed(2)}%`;
 
-export default function MatchDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const m = fixtures.find((f) => f.id === id);
+interface FixtureDetail {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  startTime: string;
+  status: string;
+}
 
-  if (!m) {
+export default function MatchDetail() {
+  const params = useParams();
+  const id = params.id as string;
+  const [fixture, setFixture] = useState<FixtureDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/matches/${encodeURIComponent(id)}`)
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data) => {
+        if (data?.fixture) setFixture(data.fixture);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <section className="py-20 text-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-bg-raised rounded w-1/3 mx-auto" />
+          <div className="h-4 bg-bg-raised rounded w-1/4 mx-auto" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!fixture) {
     return (
       <section className="py-20 text-center">
         <h1 className="text-lg font-[500] text-text-secondary mb-4">Match not found</h1>
@@ -60,7 +95,7 @@ export default function MatchDetail({ params }: { params: Promise<{ id: string }
   }
 
   const totalProb = markets.reduce((sum, mk) => {
-    const filled = mk.outcomes.map((o) => ({ ...o, label: o.label.replace("{home}", m.homeTeam).replace("{away}", m.awayTeam) }));
+    const filled = mk.outcomes.map((o) => ({ ...o, label: o.label.replace("{home}", fixture.homeTeam).replace("{away}", fixture.awayTeam) }));
     return sum + filled.reduce((s, o) => s + implied(o.odds), 0);
   }, 0);
 
@@ -87,21 +122,17 @@ export default function MatchDetail({ params }: { params: Promise<{ id: string }
             <span className={`inline-block w-1.5 h-1.5 rounded-full ${consistent ? "bg-pitch-green" : "bg-signal-amber"}`} />
             {consistent ? "Consistent" : "Flagged"}
           </span>
-          <span className="font-mono text-xs text-text-tertiary">Checked {m.lastChecked}</span>
+          <span className="font-mono text-xs text-text-tertiary">{new Date(fixture.startTime).toLocaleDateString()}</span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-[500] mb-4">
-          {m.homeTeam} <span className="text-text-tertiary font-[300]">v</span> {m.awayTeam}
+          {fixture.homeTeam} <span className="text-text-tertiary font-[300]">v</span> {fixture.awayTeam}
         </h1>
 
         <div className="flex items-center gap-4">
           <span className="text-sm text-text-secondary">Margin</span>
-          <span
-            className={`font-mono text-xl ${
-              consistent ? "text-pitch-green" : m.status === "blocked" ? "text-signal-red" : "text-signal-amber"
-            }`}
-          >
-            {m.margin >= 0 ? "+" : ""}{m.margin.toFixed(2)}%
+          <span className={`font-mono text-xl ${consistent ? "text-pitch-green" : "text-signal-amber"}`}>
+            {marginPct >= 0 ? "+" : ""}{marginPct.toFixed(2)}%
           </span>
         </div>
       </div>
@@ -110,7 +141,7 @@ export default function MatchDetail({ params }: { params: Promise<{ id: string }
 
       <div className="space-y-3 mb-8">
         {markets.map((mk) => {
-          const filled = mk.outcomes.map((o) => ({ ...o, label: o.label.replace("{home}", m.homeTeam).replace("{away}", m.awayTeam) }));
+          const filled = mk.outcomes.map((o) => ({ ...o, label: o.label.replace("{home}", fixture.homeTeam).replace("{away}", fixture.awayTeam) }));
           const sumProbs = filled.reduce((s, o) => s + implied(o.odds), 0);
           return (
             <div key={mk.name} className="bg-bg-raised border border-line-hairline rounded-lg p-6">
