@@ -1803,7 +1803,10 @@ name = "oddtrust-oracle"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "borsh",
  "litesvm",
+ "sha2 0.10.9",
+ "solana-instruction",
  "solana-keypair",
  "solana-message",
  "solana-signer",

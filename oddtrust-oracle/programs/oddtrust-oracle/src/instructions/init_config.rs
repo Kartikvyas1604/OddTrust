@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 use crate::{
     constants::ORACLE_CONFIG_SEED,
-    error::ErrorCode,
     events::ConfigInitialized,
     state::OracleConfig,
 };
