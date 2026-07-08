@@ -9,11 +9,16 @@ skip-lint = false
 [programs.localnet]
 oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
 
+[programs.devnet]
+oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
+
+[programs.mainnet]
+oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
+
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test"
-
-[hooks]
+test = "pnpm ts-mocha -p ./tests/tsconfig.json ./tests/**/*.test.ts --timeout 60000"
+demo = "pnpm tsx tests/demo.ts"
