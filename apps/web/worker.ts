@@ -25,9 +25,13 @@ async function main(): Promise<void> {
 
   const client = new TxLINEClient();
   await client.authenticate();
-  await client.subscribe();
+  const subResponse = await client.subscribe();
 
-  const stream = new TxLINEStream('');
+  const stream = new TxLINEStream(subResponse.subscription_id);
+  stream.setApiToken(subResponse.api_token);
+  stream.connect().catch((err) => {
+    log.warn({ err }, 'WebSocket connection failed (will retry)');
+  });
   const pipeline = new DetectionPipeline();
 
   client.getFixtures().then((fixtures) => {

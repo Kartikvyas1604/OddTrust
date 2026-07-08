@@ -49,7 +49,7 @@ export class TxLINEClient {
     log.info('Guest JWT obtained');
   }
 
-  async subscribe(): Promise<void> {
+  async subscribe(): Promise<TxLINESubscribeResponse> {
     if (!this.guestToken) await this.authenticate();
     const log = getLogger();
     log.info('Subscribing to TxLINE odds stream');
@@ -63,6 +63,7 @@ export class TxLINEClient {
     this.apiToken = sub.api_token;
     this.connected = true;
     log.info({ subscriptionId: this.subscriptionId }, 'TxLINE subscription active');
+    return sub;
   }
 
   async getFixtures(): Promise<TxLINEFixture[]> {
