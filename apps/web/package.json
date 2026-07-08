@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "start:ws": "tsx ws-server.ts",
+    "start:worker": "tsx worker.ts",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
