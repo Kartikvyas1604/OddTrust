@@ -20,5 +20,5 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "pnpm ts-mocha -p ./tests/tsconfig.json ./tests/**/*.test.ts --timeout 60000"
+test = "pnpm tsx --test ./tests/**/*.test.ts"
 demo = "pnpm tsx tests/demo.ts"

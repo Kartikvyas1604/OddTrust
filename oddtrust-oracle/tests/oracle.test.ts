@@ -2,7 +2,6 @@ import {
   it,
   describe,
   before,
-  after,
 } from 'node:test';
 import assert from 'node:assert';
 import {
@@ -10,20 +9,20 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
-  Transaction,
-  sendAndConfirmTransaction,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import {
   Program,
   AnchorProvider,
   Wallet,
-  getProvider,
   setProvider,
-  BN,
 } from '@coral-xyz/anchor';
 import type { OddtrustOracle } from '../target/types/oddtrust_oracle';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const FIXTURE_PREFIX = Buffer.from('fixture');
 const CONFIG_PREFIX = Buffer.from('config');
@@ -47,16 +46,20 @@ describe('oddtrust-oracle', () => {
       commitment: 'confirmed',
     });
     setProvider(provider);
+    const idl = JSON.parse(readFileSync(join(__dirname, '../target/idl/oddtrust_oracle.json'), 'utf-8'));
     program = new Program(
-      require('../target/idl/oddtrust_oracle.json'),
+      idl,
       provider,
     ) as Program<OddtrustOracle>;
 
-    await Promise.all([
+    const sigs = await Promise.all([
       connection.requestAirdrop(payer.publicKey, 10 * LAMPORTS_PER_SOL),
       connection.requestAirdrop(attacker.publicKey, 10 * LAMPORTS_PER_SOL),
       connection.requestAirdrop(backendSigner.publicKey, 10 * LAMPORTS_PER_SOL),
     ]);
+    for (const sig of sigs) {
+      await connection.confirmTransaction(sig, 'confirmed');
+    }
   });
 
   it('initializes the oracle config', async () => {
@@ -78,8 +81,8 @@ describe('oddtrust-oracle', () => {
     const config = await program.account.oracleConfig.fetch(configPda);
     assert(config.authority.equals(authority.publicKey));
     assert(config.backendSigner.equals(backendSigner.publicKey));
-    assert(config.totalChecks === 0);
-    assert(config.totalInconsistencies === 0);
+    assert(config.totalChecks.eqn(0));
+    assert(config.totalInconsistencies.eqn(0));
   });
 
   it('rejects submit_check from unauthorized signer', async () => {
@@ -141,8 +144,8 @@ describe('oddtrust-oracle', () => {
     assert(ft.fixtureId.every((b, i) => b === fixtureId[i]));
 
     const config = await program.account.oracleConfig.fetch(configPda);
-    assert(config.totalChecks === 1);
-    assert(config.totalInconsistencies === 0);
+    assert(config.totalChecks.eqn(1));
+    assert(config.totalInconsistencies.eqn(0));
   });
 
   it('updates an existing fixture and increments counts', async () => {
@@ -174,8 +177,8 @@ describe('oddtrust-oracle', () => {
     assert(ft.checkCount === 2);
 
     const config = await program.account.oracleConfig.fetch(configPda);
-    assert(config.totalChecks === 2);
-    assert(config.totalInconsistencies === 1);
+    assert(config.totalChecks.eqn(2));
+    assert(config.totalInconsistencies.eqn(1));
   });
 
   it('queries trust and gets correct state', async () => {
@@ -228,8 +231,8 @@ describe('oddtrust-oracle', () => {
       commitment: 'confirmed',
     });
     const logs = tx?.meta?.logMessages ?? [];
-    const hasExecuted = logs.some((l) => l.includes('EXECUTED'));
-    assert(hasExecuted, 'Expected EXECUTED in logs');
+    const hasExecuted = logs.some((l) => l.includes('Executed'));
+    assert(hasExecuted, 'Expected Executed decision in logs');
   });
 
   it('trading_agent_check returns BLOCKED for inconsistent fixture', async () => {
@@ -267,7 +270,7 @@ describe('oddtrust-oracle', () => {
       commitment: 'confirmed',
     });
     const logs = tx?.meta?.logMessages ?? [];
-    const hasBlocked = logs.some((l) => l.includes('BLOCKED'));
-    assert(hasBlocked, 'Expected BLOCKED in logs');
+    const hasBlocked = logs.some((l) => l.includes('Blocked'));
+    assert(hasBlocked, 'Expected Blocked decision in logs');
   });
 });

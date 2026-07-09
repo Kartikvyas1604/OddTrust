@@ -22,6 +22,7 @@ use crate::{
 #[instruction(fixture_id: [u8; 32])]
 pub struct SubmitCheck<'info> {
     #[account(
+        mut,
         seeds = [ORACLE_CONFIG_SEED],
         bump = config.bump,
     )]
@@ -58,6 +59,8 @@ pub fn handle(
         margin_bps.abs() <= MAX_MARGIN_BPS,
         ErrorCode::MarginOutOfRange
     );
+
+    ft.bump = ctx.bumps.fixture_trust;
 
     let slot = Clock::get()?.slot;
     let timestamp = Clock::get()?.unix_timestamp;
