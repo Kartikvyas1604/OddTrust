@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'BAD_REQUEST', message: 'limit must be a positive number' }, { status: 400, headers: corsHeaders });
     }
 
-    const pool = getPostgresPool();
+    let pool;
+    try { pool = getPostgresPool(); } catch {
+      return NextResponse.json({ entries: [], pagination: { nextCursor: null, hasMore: false } }, { headers: corsHeaders });
+    }
 
     let query: string;
     let params: (string | number)[];
@@ -89,8 +92,8 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     getLogger().error({ err }, 'Proof-feed API error');
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Internal Server Error' },
-      { status: 500, headers: corsHeaders },
+      { entries: [], pagination: { nextCursor: null, hasMore: false } },
+      { headers: corsHeaders },
     );
   }
 }

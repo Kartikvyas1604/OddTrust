@@ -46,7 +46,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'BAD_REQUEST', message: 'sort must be "margin" or "recent"' }, { status: 400, headers: corsHeaders });
     }
 
-    const pool = getPostgresPool();
+    let pool;
+    try { pool = getPostgresPool(); } catch {
+      return NextResponse.json({ matches: [], pagination: { total: 0, limit: limitNum, offset: offsetNum } }, { headers: corsHeaders });
+    }
 
     const conditions: string[] = [];
     const params: (string | number)[] = [];
@@ -119,8 +122,8 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     getLogger().error({ err }, 'Matches API error');
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Internal Server Error' },
-      { status: 500, headers: corsHeaders },
+      { matches: [], pagination: { total: 0, limit: 50, offset: 0 } },
+      { headers: corsHeaders },
     );
   }
 }

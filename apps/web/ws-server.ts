@@ -2,8 +2,6 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import { loadEnv, getEnv } from './lib/config';
 import { createLogger, getLogger } from './lib/logger';
-import { createRedis, createRedisSubscriber, closeRedis } from './lib/redis';
-import { metricsRegistry } from './lib/metrics';
 
 async function main() {
   loadEnv();
@@ -11,9 +9,22 @@ async function main() {
   const log = getLogger();
   const env = getEnv();
 
-  const redis = createRedis(env.REDIS_URL);
-  const subscriber = createRedisSubscriber(env.REDIS_URL);
-  await Promise.all([redis.connect(), subscriber.connect()]);
+  const port = env.WS_PORT;
+
+  let redisConnected = false;
+  let redis: any = null;
+  let subscriber: any = null;
+
+  try {
+    const redisMod = await import('./lib/redis');
+    redis = redisMod.createRedis(env.REDIS_URL);
+    subscriber = redisMod.createRedisSubscriber(env.REDIS_URL);
+    await Promise.all([redis.connect(), subscriber.connect()]);
+    redisConnected = true;
+    log.info('Redis connected for WebSocket server');
+  } catch (err) {
+    log.warn({ err }, 'Redis unavailable — WebSocket server running without pub/sub');
+  }
 
   const httpServer = createServer();
   const wss = new WebSocketServer({ server: httpServer });
@@ -21,7 +32,6 @@ async function main() {
 
   wss.on('connection', (ws: WebSocket) => {
     clients.add(ws);
-    metricsRegistry.wsConnections.set(clients.size);
     log.info({ total: clients.size }, 'WebSocket client connected');
 
     ws.send(JSON.stringify({
@@ -32,14 +42,12 @@ async function main() {
 
     ws.on('close', () => {
       clients.delete(ws);
-      metricsRegistry.wsConnections.set(clients.size);
       log.info({ total: clients.size }, 'WebSocket client disconnected');
     });
 
     ws.on('error', (err) => {
       log.error({ err }, 'WebSocket client error');
       clients.delete(ws);
-      metricsRegistry.wsConnections.set(clients.size);
     });
 
     ws.on('pong', () => {
@@ -63,36 +71,36 @@ async function main() {
     }
   }, 15000);
 
-  await subscriber.subscribe(env.REDIS_PROOF_FEED_CHANNEL);
-  log.info('Subscribed to proof-feed Redis channel');
+  if (redisConnected && subscriber) {
+    try {
+      await subscriber.subscribe(env.REDIS_PROOF_FEED_CHANNEL);
+      log.info('Subscribed to proof-feed Redis channel');
 
-  subscriber.on('message', (_channel: string, message: string) => {
-    for (const ws of clients) {
-      if (ws.readyState === WebSocket.OPEN) {
-        try {
-          ws.send(message);
-        } catch (err) {
-          log.error({ err }, 'Failed to send WS message');
+      subscriber.on('message', (_channel: string, message: string) => {
+        for (const ws of clients) {
+          if (ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.send(message);
+            } catch (err) {
+              log.error({ err }, 'Failed to send WS message');
+            }
+          }
         }
-      }
+      });
+    } catch (err) {
+      log.warn({ err }, 'Redis pub/sub subscription failed');
     }
-  });
+  }
 
   wss.on('close', () => {
     clearInterval(pingInterval);
-    subscriber.unsubscribe();
-    subscriber.quit();
-    closeRedis();
+    try { subscriber?.unsubscribe(); } catch {}
+    try { subscriber?.quit(); } catch {}
+    try { redis?.quit(); } catch {}
   });
 
-  const port = env.WS_PORT;
   httpServer.listen(port, () => {
     log.info({ port, path: '/ws/proof-feed' }, 'WebSocket server ready');
-
-    setInterval(() => {
-      const count = clients.size;
-      redis.set('metrics:ws-connections', String(count)).catch(() => {});
-    }, 10000);
   });
 }
 

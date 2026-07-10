@@ -54,7 +54,14 @@ export async function POST(request: NextRequest) {
 
     const result = checkConsistency(fixtureId, markets, marketTypes, oddsSnapshotHash);
 
-    const pool = getPostgresPool();
+    let pool;
+    try { pool = getPostgresPool(); } catch {
+      return NextResponse.json(
+        { ...result, checkId: null, createdAt: new Date().toISOString(), degraded: true },
+        { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } },
+      );
+    }
+
     const check = await pool.query(
       `INSERT INTO consistency_checks (fixture_id, is_consistent, margin_bps, market_set, odds_snapshot_hash, txline_proof_ref)
        VALUES ($1, $2, $3, $4, $5, $6)

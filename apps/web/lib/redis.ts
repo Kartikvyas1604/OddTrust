@@ -15,11 +15,19 @@ export function createRedis(url: string): Redis {
   });
 
   redis.on('error', (err) => {
-    getLogger().error({ err }, 'Redis connection error');
+    try {
+      getLogger().error({ err }, 'Redis connection error');
+    } catch {
+      console.error('Redis error:', err.message);
+    }
   });
 
   redis.on('connect', () => {
-    getLogger().info('Redis connected');
+    try {
+      getLogger().info('Redis connected');
+    } catch {
+      console.log('Redis connected');
+    }
   });
 
   return redis;
@@ -54,8 +62,8 @@ export function getRedisSubscriber(): Redis {
 }
 
 export async function closeRedis(): Promise<void> {
-  await Promise.all([
+  await Promise.allSettled([
     redis?.quit(),
     subscriber?.quit(),
-  ].filter(Boolean));
+  ]);
 }

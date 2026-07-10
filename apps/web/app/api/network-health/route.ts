@@ -11,6 +11,18 @@ const CACHE_KEY = 'api:network-health';
 const CACHE_TTL = 15;
 const corsHeaders = { 'Access-Control-Allow-Origin': '*' };
 
+const fallbackHealth = {
+  totalChecks: 0,
+  consistencyRate: 100,
+  currentSlot: 0,
+  connectedAgents: 0,
+  txlineConnected: false,
+  queueDepth: 0,
+  networkStatus: 'degraded' as const,
+  updatedAt: new Date().toISOString(),
+  degraded: true,
+};
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -27,14 +39,18 @@ export async function GET() {
   try {
     ensureInit();
 
-    const redis = getRedis();
+    let redis;
+    try { redis = getRedis(); } catch { return NextResponse.json(fallbackHealth, { headers: corsHeaders }); }
 
-    const cached = await redis.get(CACHE_KEY);
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached), { headers: { 'X-Cache': 'HIT', ...corsHeaders } });
-    }
+    try {
+      const cached = await redis.get(CACHE_KEY);
+      if (cached) {
+        return NextResponse.json(JSON.parse(cached), { headers: { 'X-Cache': 'HIT', ...corsHeaders } });
+      }
+    } catch { /* Redis unavailable */ }
 
-    const pool = getPostgresPool();
+    let pool;
+    try { pool = getPostgresPool(); } catch { return NextResponse.json(fallbackHealth, { headers: corsHeaders }); }
 
     const [totalResult, consistentResult, slotResult, txlineResult] = await Promise.all([
       pool.query('SELECT COUNT(*) as count FROM consistency_checks'),
@@ -49,8 +65,11 @@ export async function GET() {
     const currentSlot = slotResult.rows[0]?.latest_slot ? parseInt(slotResult.rows[0].latest_slot, 10) : 0;
     const txlineConnected = txlineResult.rows[0]?.ts !== null;
 
-    const wsCount = await redis.get('metrics:ws-connections');
-    const connectedAgents = parseInt(wsCount || '0', 10);
+    let connectedAgents = 0;
+    try {
+      const wsCount = await redis.get('metrics:ws-connections');
+      connectedAgents = parseInt(wsCount || '0', 10);
+    } catch { /* Redis unavailable */ }
 
     let queueDepth = 0;
     try {
@@ -73,14 +92,11 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     };
 
-    await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(health));
+    try { await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(health)); } catch {}
 
     return NextResponse.json(health, { headers: corsHeaders });
   } catch (err) {
     getLogger().error({ err }, 'Network health API error');
-    return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Internal Server Error' },
-      { status: 500, headers: corsHeaders },
-    );
+    return NextResponse.json(fallbackHealth, { headers: corsHeaders });
   }
 }

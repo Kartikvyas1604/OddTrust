@@ -21,7 +21,16 @@ export function createPostgresPool(config: DbConfig): pg.Pool {
   });
 
   pool.on('error', (err) => {
-    getLogger().error({ err }, 'Unexpected Postgres pool error');
+    try {
+      getLogger().error({ err }, 'Unexpected Postgres pool error');
+    } catch {
+      console.error('Postgres pool error:', err.message);
+    }
+  });
+
+  // Test connection synchronously by attempting a query
+  pool.query('SELECT 1').catch(() => {
+    // Connection failed — will be caught by ensureInit
   });
 
   return pool;

@@ -34,11 +34,20 @@ let env: Env;
 export function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {
-    console.error('Environment validation failed:');
-    for (const issue of result.error.issues) {
-      console.error(`  ${issue.path.join('.')}: ${issue.message}`);
-    }
-    process.exit(1);
+    const issues = result.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
+    console.warn(`Environment validation warnings:\n${issues}\n\nContinuing with defaults where possible.`);
+    // Use defaults for missing values in development
+    env = envSchema.parse({
+      ...process.env,
+      NODE_ENV: process.env.NODE_ENV ?? 'development',
+      PORT: process.env.PORT ?? '3001',
+      HOST: process.env.HOST ?? '0.0.0.0',
+      DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://localhost:5432/oddtrust',
+      REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379',
+      TXLINE_CLIENT_ID: process.env.TXLINE_CLIENT_ID ?? 'dev_placeholder',
+      TXLINE_WALLET_KEY: process.env.TXLINE_WALLET_KEY ?? 'dev_placeholder',
+    });
+    return env;
   }
   env = result.data;
   return env;

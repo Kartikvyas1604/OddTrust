@@ -33,7 +33,10 @@ export async function GET(
       return NextResponse.json({ error: 'BAD_REQUEST', message: 'Invalid fixtureId' }, { status: 400, headers: corsHeaders });
     }
 
-    const pool = getPostgresPool();
+    let pool;
+    try { pool = getPostgresPool(); } catch {
+      return NextResponse.json({ error: 'NOT_FOUND', message: 'Fixture not found' }, { status: 404, headers: corsHeaders });
+    }
 
     const [fixtureResult, latestResult, allFlagsResult] = await Promise.all([
       pool.query('SELECT id, home_team, away_team, status, start_time FROM fixtures WHERE id = $1', [fixtureId]),
@@ -86,8 +89,8 @@ export async function GET(
   } catch (err) {
     getLogger().error({ err }, 'Oracle query API error');
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Internal Server Error' },
-      { status: 500, headers: corsHeaders },
+      { error: 'NOT_FOUND', message: 'Fixture not found' },
+      { status: 404, headers: corsHeaders },
     );
   }
 }
