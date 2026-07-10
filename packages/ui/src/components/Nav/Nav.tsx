@@ -34,24 +34,21 @@ export function Nav() {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 z-50 transition-colors duration-200 border-b ${
         scrolled
-          ? "bg-bg-void/80 backdrop-blur-xl border-b border-line-hairline/60 shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
-          : "bg-transparent border-b border-line-hairline/30"
+          ? "bg-bg-void/90 backdrop-blur-md border-line-hairline/50"
+          : "bg-bg-void/60 backdrop-blur-sm border-line-hairline/20"
       }`}
     >
-      <div className="mx-auto max-w-[1440px] px-6 lg:px-12 flex items-center justify-between h-16">
-        {/* Wordmark */}
+      <div className="mx-auto max-w-[1440px] px-6 lg:px-12 flex items-center justify-between h-14">
         <Link
           href="/"
-          className="flex items-center gap-0.5 text-xl font-[600] tracking-tight text-text-primary hover:opacity-80 transition-opacity no-underline shrink-0"
+          className="text-lg font-[600] tracking-tight text-text-primary no-underline shrink-0"
         >
-          <span>Odds</span>
-          <span className="text-pitch-green">Trust</span>
+          Odds<span className="text-pitch-green">Trust</span>
         </Link>
 
-        {/* Center nav */}
-        <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-8">
           {links.map((l) => {
             const active =
               l.href === "/matches"
@@ -61,33 +58,28 @@ export function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`relative px-3.5 py-1.5 text-sm rounded-md transition-all duration-200 no-underline whitespace-nowrap ${
+                className={`text-sm no-underline transition-colors duration-150 ${
                   active
-                    ? "text-text-primary font-[500] bg-bg-raised/80"
-                    : "text-text-secondary hover:text-text-primary hover:bg-bg-raised/40"
+                    ? "text-text-primary font-[500]"
+                    : "text-text-secondary hover:text-text-primary"
                 }`}
               >
                 {l.label}
-                {active && (
-                  <span className="absolute inset-x-3.5 -bottom-[13px] h-[2px] bg-pitch-green rounded-full" />
-                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right side — live indicator */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-line-hairline/50 bg-bg-raised/30">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-pulse-dot absolute inline-flex h-full w-full rounded-full bg-pitch-green opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-pitch-green" />
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-pulse-dot absolute inline-flex h-full w-full rounded-full bg-pitch-green opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-pitch-green" />
             </span>
-            <span className="font-mono text-xs text-text-secondary hidden sm:inline">Live</span>
+            <span className="font-mono text-xs text-text-tertiary">
+              {slot ? `#${slot.toLocaleString()}` : "Live"}
+            </span>
           </div>
-          <span className="font-mono text-xs text-text-tertiary hidden lg:block">
-            {slot ? `#${slot.toLocaleString()}` : "---"}
-          </span>
         </div>
       </div>
     </header>
