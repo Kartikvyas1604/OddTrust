@@ -71,8 +71,8 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://oddtrust:oddtrust_dev@postgres:5432/oddtrust
       REDIS_URL: redis://redis:6379
-      TXLINE_API_BASE: ${TXLINE_API_BASE:-https://api.txline.txodds.com/v1}
-      TXLINE_WS_URL: ${TXLINE_WS_URL:-wss://stream.txline.txodds.com/v1}
+      TXLINE_API_BASE: ${TXLINE_API_BASE:-https://txline-dev.txodds.com/api}
+      TXLINE_SSE_URL: ${TXLINE_SSE_URL:-https://txline-dev.txodds.com/api/odds/stream}
       TXLINE_CLIENT_ID: ${TXLINE_CLIENT_ID}
       TXLINE_WALLET_KEY: ${TXLINE_WALLET_KEY}
       SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}

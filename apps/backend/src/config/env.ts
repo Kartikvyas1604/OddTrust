@@ -12,8 +12,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
 
-  TXLINE_API_BASE: z.string().url().default('https://api.txline.txodds.com/v1'),
-  TXLINE_WS_URL: z.string().url().default('wss://stream.txline.txodds.com/v1'),
+  TXLINE_API_BASE: z.string().url().default('https://txline-dev.txodds.com/api'),
+  TXLINE_SSE_URL: z.string().url().default('https://txline-dev.txodds.com/api/odds/stream'),
   TXLINE_CLIENT_ID: z.string().min(1),
   TXLINE_WALLET_KEY: z.string().min(1),
 
@@ -35,19 +35,9 @@ export function loadEnv(): Env {
   const result = envSchema.safeParse(process.env);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
-    console.warn(`Environment validation warnings:\n${issues}\n\nContinuing with defaults where possible.`);
-    // Use defaults for missing values in development
-    env = envSchema.parse({
-      ...process.env,
-      NODE_ENV: process.env.NODE_ENV ?? 'development',
-      PORT: process.env.PORT ?? '3001',
-      HOST: process.env.HOST ?? '0.0.0.0',
-      DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://localhost:5432/oddtrust',
-      REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379',
-      TXLINE_CLIENT_ID: process.env.TXLINE_CLIENT_ID ?? 'dev_placeholder',
-      TXLINE_WALLET_KEY: process.env.TXLINE_WALLET_KEY ?? 'dev_placeholder',
-    });
-    return env;
+    console.error(`Environment validation failed:\n${issues}`);
+    console.error('Please check your .env file and ensure all required variables are properly set');
+    process.exit(1);
   }
   env = result.data;
   return env;

@@ -13,8 +13,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
 
-  TXLINE_API_BASE: z.string().url().default('https://api.txline.txodds.com/v1'),
-  TXLINE_WS_URL: z.string().url().default('wss://stream.txline.txodds.com/v1'),
+  TXLINE_API_BASE: z.string().url().default('https://txline-dev.txodds.com/api'),
+  TXLINE_SSE_URL: z.string().url().default('https://txline-dev.txodds.com/api/odds/stream'),
   TXLINE_CLIENT_ID: z.string().min(1),
   TXLINE_WALLET_KEY: z.string().min(1),
 
