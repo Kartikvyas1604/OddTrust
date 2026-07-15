@@ -96,10 +96,10 @@ async function findProgramAddress(
   seeds: Buffer[],
   programId: Buffer,
 ): Promise<{ address: Buffer; bump: number }> {
-  const { createProgramDerivedAddress } = await import(
+  const { getProgramDerivedAddress } = await import(
     '@solana/addresses'
   ) as unknown as {
-    createProgramDerivedAddress: (opts: { programAddress: string; seeds: ReadonlyArray<Uint8Array> }) => Promise<string>;
+    getProgramDerivedAddress: (opts: { programAddress: string; seeds: ReadonlyArray<Uint8Array> }) => Promise<string>;
   };
 
   // @ts-ignore
@@ -110,7 +110,7 @@ async function findProgramAddress(
     try {
       const bumpSeed = Buffer.from([bump]);
       const allSeeds: ReadonlyArray<Uint8Array> = [...seeds.map(s => new Uint8Array(s)), new Uint8Array(bumpSeed)];
-      const pdaAddress = await createProgramDerivedAddress({ programAddress, seeds: allSeeds });
+      const pdaAddress = await getProgramDerivedAddress({ programAddress, seeds: allSeeds });
       return { address: Buffer.from(bs58.decode(pdaAddress)), bump };
     } catch {
       // Not a valid PDA — try next bump

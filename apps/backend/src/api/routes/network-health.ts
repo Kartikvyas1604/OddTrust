@@ -16,7 +16,6 @@ export default async function networkHealthRoutes(app: FastifyInstance): Promise
     }
 
     const pool = getPostgresPool();
-    const queue = getSubmissionQueue();
 
     const totalResult = await pool.query('SELECT COUNT(*) as count FROM consistency_checks');
     const totalChecks = parseInt(totalResult.rows[0].count, 10);
@@ -40,8 +39,14 @@ export default async function networkHealthRoutes(app: FastifyInstance): Promise
     const wsCount = await redis.get('metrics:ws-connections');
     const connectedAgents = parseInt(wsCount || '0', 10);
 
-    const queueCounts = await queue.getJobCounts();
-    const pendingSubmissions = (queueCounts.waiting || 0) + (queueCounts.active || 0);
+    let pendingSubmissions = 0;
+    try {
+      const queue = getSubmissionQueue();
+      const queueCounts = await queue.getJobCounts();
+      pendingSubmissions = (queueCounts.waiting || 0) + (queueCounts.active || 0);
+    } catch {
+      // Queue not initialized — degraded mode
+    }
 
     const txlineResult = await pool.query(
       "SELECT MAX(ingested_at) as ts FROM odds_snapshots WHERE ingested_at > NOW() - INTERVAL '5 minutes'",

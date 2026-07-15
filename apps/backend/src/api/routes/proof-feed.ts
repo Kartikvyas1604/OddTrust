@@ -10,12 +10,16 @@ export default async function proofFeedRoutes(app: FastifyInstance): Promise<voi
   app.get('/api/proof-feed', async (req: FastifyRequest<{ Querystring: ProofFeedQuery }>, reply: FastifyReply) => {
     const { cursor, limit = '25' } = req.query;
     const pool = getPostgresPool();
-    const pageSize = Math.min(parseInt(limit, 10), 100);
+    const pageSize = Math.min(parseInt(limit, 10) || 25, 100);
 
     let query: string;
     let params: (string | number)[];
 
     if (cursor) {
+      const cursorDate = new Date(cursor);
+      if (isNaN(cursorDate.getTime())) {
+        return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Invalid cursor format' });
+      }
       query = `
         SELECT pl.id, pl.fixture_id, pl.consensus, pl.margin,
                pl.on_chain_tx, pl.on_chain_slot, pl.summary, pl.logged_at
@@ -24,7 +28,7 @@ export default async function proofFeedRoutes(app: FastifyInstance): Promise<voi
         ORDER BY pl.logged_at DESC
         LIMIT $2
       `;
-      params = [cursor, pageSize + 1];
+      params = [cursorDate.toISOString(), pageSize + 1];
     } else {
       query = `
         SELECT pl.id, pl.fixture_id, pl.consensus, pl.margin,
