@@ -12,7 +12,7 @@ pub use constants::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit");
+declare_id!("ADh4LSG8RQpvtW4Shw8ELfM7KZJCN1Jf5cHCWanjUyF8");
 
 #[program]
 pub mod oddtrust_oracle {

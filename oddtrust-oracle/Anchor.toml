@@ -6,19 +6,22 @@ skip_local_validator = true
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
-
 [programs.devnet]
-oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
+oddtrust_oracle = "ADh4LSG8RQpvtW4Shw8ELfM7KZJCN1Jf5cHCWanjUyF8"
+
+[programs.localnet]
+oddtrust_oracle = "ADh4LSG8RQpvtW4Shw8ELfM7KZJCN1Jf5cHCWanjUyF8"
 
 [programs.mainnet]
-oddtrust_oracle = "HooVY5etEhNnPWouvZhzGCgbTjBfk3mff66S8jFgaAit"
+oddtrust_oracle = "ADh4LSG8RQpvtW4Shw8ELfM7KZJCN1Jf5cHCWanjUyF8"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "pnpm tsx --test ./tests/**/*.test.ts"
 demo = "pnpm tsx tests/demo.ts"
+test = "pnpm tsx --test ./tests/**/*.test.ts"
+init-config = "pnpm tsx scripts/init-config.ts"
+
+[hooks]
